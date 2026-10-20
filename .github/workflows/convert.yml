@@ -19,12 +19,17 @@ jobs:
           test "$URL" != "null"
           curl -fL "$URL" -o APKEditor.jar
 
+
       - name: Convert
         run: |
-          test -f "بنك-هارون_1.0.1.apks"
-          java -jar APKEditor.jar m \
-            -i "بنك-هارون_1.0.1.apks" \
-            -o Haroun.apk
+          FILE=$(find . -type f -iname '*.apks' -not -path './.git/*' -print -quit)
+          if [ -z "$FILE" ]; then
+            echo "ERROR: No APKS file found in repository"
+            find . -maxdepth 3 -type f
+            exit 1
+          fi
+          echo "Found: $FILE"
+          java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
 
 
       - name: Convert
