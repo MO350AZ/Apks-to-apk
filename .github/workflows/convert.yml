@@ -1,0 +1,40 @@
+
+name: Convert APKS to APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APKEditor
+        run: |
+          URL=$(curl -fsSL \
+            https://api.github.com/repos/REAndroid/APKEditor/releases/latest \
+            | jq -r '[.assets[] | select(.name | endswith(".jar"))][0].browser_download_url')
+          test "$URL" != "null"
+          curl -fL "$URL" -o APKEditor.jar
+
+      - name: Download input APKS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download input-apks \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern '*.apks'
+
+      - name: Convert
+        run: |
+          FILE=$(find . -maxdepth 1 -name '*.apks' -print -quit)
+          test -n "$FILE"
+          java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Haroun-APK
+          path: Haroun.apk
