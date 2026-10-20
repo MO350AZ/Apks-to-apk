@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   convert:
@@ -33,8 +33,12 @@ jobs:
           test -n "$FILE"
           java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Haroun-APK
-          path: Haroun.apk
+
+      - name: Publish APK Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "converted-${GITHUB_RUN_NUMBER}" \
+            Haroun.apk \
+            --title "Haroun APK" \
+            --notes "Converted from APKS"
