@@ -38,6 +38,28 @@ jobs:
           java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
           test -s Haroun.apk
 
+      - name: Sign APK
+        run: |
+          URL=$(curl -fsSL \
+            https://api.github.com/repos/patrickfav/uber-apk-signer/releases/latest \
+            | jq -r '[.assets[] | select(.name | endswith(".jar"))][0].browser_download_url')
+
+          test -n "$URL" && test "$URL" != "null"
+          curl -fL "$URL" -o signer.jar
+
+          java -jar signer.jar --apks Haroun.apk
+
+          SIGNED=$(find . -type f \
+            -name 'Haroun-aligned-debugSigned.apk' \
+            -print -quit)
+
+          if [ -z "$SIGNED" ]; then
+            find . -type f -name '*Signed.apk'
+            exit 1
+          fi
+
+          cp "$SIGNED" Haroun-signed.apk
+
       - name: Publish APK Release
         env:
           GH_TOKEN: ${{ github.token }}
