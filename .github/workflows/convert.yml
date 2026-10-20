@@ -19,13 +19,13 @@ jobs:
           test "$URL" != "null"
           curl -fL "$URL" -o APKEditor.jar
 
-      - name: Download input APKS
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Convert
         run: |
-          gh release download input-apks \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern '*.apks'
+          test -f "بنك-هارون_1.0.1.apks"
+          java -jar APKEditor.jar m \
+            -i "بنك-هارون_1.0.1.apks" \
+            -o Haroun.apk
+
 
       - name: Convert
         run: |
