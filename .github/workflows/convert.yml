@@ -10,34 +10,33 @@ permissions:
 jobs:
   convert:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download APKEditor
         run: |
           URL=$(curl -fsSL \
             https://api.github.com/repos/REAndroid/APKEditor/releases/latest \
             | jq -r '[.assets[] | select(.name | endswith(".jar"))][0].browser_download_url')
-          test "$URL" != "null"
+          test -n "$URL" && test "$URL" != "null"
           curl -fL "$URL" -o APKEditor.jar
 
-
-      - name: Convert
+      - name: Convert APKS
         run: |
-          FILE=$(find . -type f -iname '*.apks' -not -path './.git/*' -print -quit)
+          FILE=$(find . -type f -iname '*.apks' \
+            -not -path './.git/*' -print -quit)
+
           if [ -z "$FILE" ]; then
-            echo "ERROR: No APKS file found in repository"
-            find . -maxdepth 3 -type f
+            echo "No APKS file found in repository"
+            git ls-files
             exit 1
           fi
+
           echo "Found: $FILE"
           java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
-
-
-      - name: Convert
-        run: |
-          FILE=$(find . -maxdepth 1 -name '*.apks' -print -quit)
-          test -n "$FILE"
-          java -jar APKEditor.jar m -i "$FILE" -o Haroun.apk
-
+          test -s Haroun.apk
 
       - name: Publish APK Release
         env:
@@ -47,3 +46,4 @@ jobs:
             Haroun.apk \
             --title "Haroun APK" \
             --notes "Converted from APKS"
+
